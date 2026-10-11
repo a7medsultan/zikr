@@ -7,12 +7,13 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"icons": "node scripts/generate-icons.mjs",
 		"smoke": "node scripts/smoke.mjs",
 		"shots": "node scripts/shots.mjs",
 		"shots:i18n": "node scripts/shots-i18n.mjs",
 		"audit:i18n": "node scripts/audit-i18n.mjs",
-		"prepare": "svelte-kit sync || echo ''"
+		"prepare": "svelte-kit sync || echo ''",
+		"logo": "python scripts/import_logo.py",
+		"check:icons": "node scripts/check-icons.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^8.0.0",

@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { asset } from '$app/paths';
 	import AutoBar from '#lib/components/AutoBar.svelte';
 	import Background from '#lib/components/Background.svelte';
 	import Beads from '#lib/components/Beads.svelte';
@@ -39,6 +40,8 @@
 
 	let rippleId = 0;
 	let tapCount = 0;
+
+	const logoUrl = asset('logo.png');
 
 	onMount(() => {
 		const measure = () => {
@@ -139,9 +142,13 @@
 {#if !zen}
 		<header class="safe-t flex items-center justify-between gap-2 px-4">
 			<div class="flex items-baseline gap-2">
-				<span class="font-arabic text-2xl leading-none text-accent" dir="rtl" lang="ar"
-					>ذِكْر</span
-				>
+				<img
+					src={logoUrl}
+					alt=""
+					width="36"
+					height="36"
+					class="h-9 w-9 rounded-xl ring-1 ring-[var(--line)]"
+				/>
 				<span class="text-xs tracking-[0.3em] text-muted uppercase">{t('app.title')}</span>
 			</div>
 

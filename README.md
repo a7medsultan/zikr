@@ -64,9 +64,11 @@ The service worker needs a secure context, so use `localhost` or serve the
 - Export a full JSON backup, or history and daily CSV; re-import a JSON backup.
 
 **PWA**
-- Installable with a generated icon set (any + maskable), web manifest and a
-  hand-written service worker: precached shell, cache-first assets,
-  network-first navigation. It works fully offline once installed.
+- Installable with an icon set generated from the project logo (standard,
+  192, Apple touch, favicon, and a maskable variant that keeps the artwork
+  inside the safe zone), a web manifest and a hand-written service worker:
+  precached shell, cache-first assets, network-first navigation. It works fully
+  offline once installed.
 
 **Languages**
 - English and Arabic, switchable from the header or Settings, remembered
@@ -95,11 +97,14 @@ src/
 static/
   manifest.webmanifest
   sw.js
-  icons/            generated PNGs
+  logo.png           in-app header mark
+  icons/             generated from the logo
 scripts/
-  generate-icons.mjs  draws and encodes the icons with no dependencies
+  import_logo.py     regenerates the icon set from a source image
   smoke.mjs           drives a headless Edge over CDP to test the built app
   shots.mjs           captures screenshots of every screen
+  shots-i18n.mjs      captures both languages, LTR and RTL
+  audit-i18n.mjs      missing translation keys, hard-coded strings
 ```
 
 ### Data model
@@ -183,12 +188,56 @@ own numbering system instead, set `NUMBERING_SYSTEM` to `undefined` in
 ## Development helpers
 
 ```bash
-npm run icons      # regenerate static/icons/*.png
+npm run logo -- "C:\path\to\logo.jpg"  # regenerate the icon set from a logo
 npm run smoke      # end-to-end check against a running preview server
 npm run shots      # write screenshots into shots/
 npm run shots:i18n # screenshot both languages, LTR and RTL
 npm run audit:i18n # missing translation keys, hard-coded strings
 ```
+
+### Regenerating the icons
+
+Every icon comes from one source image, so replacing the artwork means one
+command:
+
+```bash
+npm run logo -- "../zikr_logo.jpg"
+```
+
+`scripts/import_logo.py` centre-crops to a square and writes the full set into
+`static/`. The maskable icon is the one that needs care: launchers crop to
+various shapes, so the artwork is scaled to 76% and the surround is filled with
+the colour sampled from the logo's own corners — which keeps the launcher icon
+flush with the app's background instead of framing it in black. That sampled
+colour is also the app's `theme-color`, so the browser chrome matches the icon.
+
+Requires Pillow (`python -m pip install Pillow`).
+
+#### Why the icon sometimes looks stuck
+
+An installed PWA's launcher icon is snapshotted by the operating system **at
+install time**. Android and Windows both keep it, so updating the logo on the
+web does not change an icon for an app that is already installed — you have to
+uninstall and install again.
+
+Everything the web *can* control is handled automatically. `import_logo.py`
+hashes the artwork and stamps that hash onto both the manifest icon URLs
+(`/icons/icon-512.png?v=7e740d0dc5`) and the service-worker cache name
+(`zikr-7e740d0dc5`), and precaches with `cache: 'reload'`. So a new logo always
+produces new URLs, a new cache, and a purge of the previous one — the browser
+and the PWA cannot keep serving the old image. Re-running the command is
+idempotent.
+
+To check the cycle yourself, serve a build, load it, then regenerate from a
+different logo and reload:
+
+```bash
+npm run check:icons -- http://localhost:4173 9340 /tmp/profile "before"
+npm run logo -- ../other-logo.jpg && npm run build   # reload the same origin
+npm run check:icons -- http://localhost:4173 9341 /tmp/profile "after"
+```
+
+`after` should show a different cache name and a different icon byte count.
 
 `smoke` boots headless Edge over the DevTools protocol and asserts the things
 that are easy to break: counting, undo, dhikr switching, auto-count, the target

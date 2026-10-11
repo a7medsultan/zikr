@@ -76,7 +76,7 @@ export function applyTheme() {
 	document.documentElement.classList.toggle('dark', dark);
 	document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
 	const meta = document.querySelector('meta[name="theme-color"]');
-	if (meta) meta.setAttribute('content', dark ? '#04160f' : '#f6f3ea');
+	if (meta) meta.setAttribute('content', dark ? '#0f4f38' : '#f6f3ea');
 }
 
 export function updateSettings(patch) {

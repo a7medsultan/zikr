@@ -1,23 +1,30 @@
 /* Zikr service worker — offline-first app shell with runtime caching. */
-const VERSION = 'v1';
+const VERSION = '7e740d0dc5';
 const CACHE = `zikr-${VERSION}`;
 
 const PRECACHE = [
-	'/',
-	'/index.html',
-	'/manifest.webmanifest',
-	'/favicon.svg',
-	'/icons/icon-192.png',
-	'/icons/icon-512.png',
-	'/icons/maskable-512.png',
-	'/icons/apple-touch-icon.png'
+	'/?v=7e740d0dc5',
+	'/index.html?v=7e740d0dc5',
+	'/manifest.webmanifest?v=7e740d0dc5',
+	'/logo.png?v=7e740d0dc5',
+	'/icons/icon-192.png?v=7e740d0dc5',
+	'/icons/icon-512.png?v=7e740d0dc5',
+	'/icons/maskable-512.png?v=7e740d0dc5',
+	'/icons/apple-touch-icon.png?v=7e740d0dc5',
+	'/icons/favicon-64.png?v=7e740d0dc5'
 ];
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(
 		caches
 			.open(CACHE)
-			.then((cache) => Promise.allSettled(PRECACHE.map((url) => cache.add(url))))
+			.then((cache) =>
+				// `cache: 'reload'` skips the HTTP cache so a deploy cannot
+				// re-precache the files it just replaced.
+				Promise.allSettled(
+					PRECACHE.map((url) => cache.add(new Request(url, { cache: 'reload' })))
+				)
+			)
 			.then(() => self.skipWaiting())
 	);
 });
@@ -45,6 +52,20 @@ function isAsset(url) {
 	);
 }
 
+/**
+ * Looks a request up in the current cache, ignoring the `?v=` stamp that the
+ * logo tooling adds, so a precached shell still answers a plain navigation.
+ */
+async function matchShell(request) {
+	const cache = await caches.open(CACHE);
+	const direct = await cache.match(request);
+	if (direct) return direct;
+
+	const url = new URL(request.url);
+	url.search = '';
+	return (await cache.match(url.href)) ?? (await cache.match(url.pathname));
+}
+
 /** Network-first so a fresh deploy is picked up, cache as the offline safety net. */
 async function networkFirst(request) {
 	try {
@@ -55,9 +76,9 @@ async function networkFirst(request) {
 		}
 		return response;
 	} catch {
-		const cached = await caches.match(request);
+		const cached = await matchShell(request);
 		if (cached) return cached;
-		const shell = await caches.match('/index.html');
+		const shell = await matchShell('/index.html');
 		if (shell) return shell;
 		return new Response('<h1>Zikr is offline</h1>', {
 			status: 503,
@@ -68,7 +89,7 @@ async function networkFirst(request) {
 
 /** Cache-first for hashed build assets, refreshing in the background. */
 async function staleWhileRevalidate(request) {
-	const cached = await caches.match(request);
+	const cached = await matchShell(request);
 	const network = fetch(request)
 		.then((response) => {
 			if (response?.ok) {

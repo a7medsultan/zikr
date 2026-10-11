@@ -114,21 +114,21 @@ async function report(label) {
 await cdp.send('Page.navigate', { url: URL_APP });
 await sleep(5000);
 await evaluate(
-	`(() => { for (let i=0;i<9;i++) document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:195,clientY:420})); return true; })()`
+	`(() => { for (let i=0;i<9;i++) (function(){const b=document.querySelector('main button');const r=b.getBoundingClientRect();b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));})(); return true; })()`
 );
 await sleep(800);
 await report('EN');
 await shot('en-home');
 
-// --- Switch to Arabic via the header globe button ---
+// --- Switch to Arabic from the Language section of Settings ---
 await evaluate(
 	`(() => {
-		const btn = document.querySelectorAll('header button')[2];
+		const btn = document.querySelectorAll('header button')[3];
 		btn?.click(); return !!btn;
 	})()`
 );
 await sleep(800);
-await shot('en-language-picker');
+await shot('en-settings-language');
 
 await evaluate(
 	`(() => {
@@ -143,7 +143,7 @@ await shot('ar-home');
 
 // Arabic statistics sheet
 await evaluate(
-	`(() => { const b=document.querySelectorAll('header button')[0]; b?.click(); return !!b; })()`
+	`(() => { const b=document.querySelectorAll('header button')[1]; b?.click(); return !!b; })()`
 );
 await sleep(1000);
 await shot('ar-stats');

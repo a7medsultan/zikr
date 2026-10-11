@@ -90,7 +90,7 @@ async function shot(name) {
 
 // Count a few so the UI is not empty
 await evaluate(
-	`(() => { for (let i=0;i<9;i++) document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:195,clientY:420})); return true; })()`
+	`(() => { for (let i=0;i<9;i++) (function(){const b=document.querySelector('main button');const r=b.getBoundingClientRect();b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));})(); return true; })()`
 );
 await sleep(900);
 await shot('01-home');
@@ -153,7 +153,7 @@ await shot('08-zikrs');
 // Celebration
 await evaluate(`document.querySelector('button[aria-label="Close"]')?.click()`);
 await sleep(400);
-await evaluate(`(() => { for (let i=0;i<24;i++) document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:195,clientY:420})); return true; })()`);
+await evaluate(`(() => { for (let i=0;i<24;i++) (function(){const b=document.querySelector('main button');const r=b.getBoundingClientRect();b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:r.left+r.width/2,clientY:r.top+r.height/2}));})(); return true; })()`);
 await sleep(600);
 await shot('09-celebration');
 

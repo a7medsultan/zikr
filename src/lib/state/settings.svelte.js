@@ -25,6 +25,7 @@ const defaults = {
 	theme: 'dark',
 	sound: 'wood',
 	volume: 0.6,
+	muted: false,
 	haptics: true,
 	dailyGoal: 500,
 	pattern: 'girih',

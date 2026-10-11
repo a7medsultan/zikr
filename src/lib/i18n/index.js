@@ -71,6 +71,7 @@ function pluralCategory(code, count) {
 
 function selectForm(node, code, params) {
 	if (typeof node === 'string') return node;
+	if (Array.isArray(node)) return node;
 	if (node == null || typeof node !== 'object') return undefined;
 
 	if (params?.count !== undefined) {

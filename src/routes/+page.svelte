@@ -6,7 +6,6 @@
 	import Beads from '#lib/components/Beads.svelte';
 	import Celebration from '#lib/components/Celebration.svelte';
 	import CountRing from '#lib/components/CountRing.svelte';
-	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import Ripples from '#lib/components/Ripples.svelte';
 	import SettingsView from '#lib/components/SettingsView.svelte';
 	import Sheet from '#lib/components/Sheet.svelte';
@@ -17,7 +16,7 @@
 	import { formatPlain } from '#lib/i18n/format.js';
 	import { locale, t } from '#lib/state/locale.svelte.js';
 	import { stopAutoOnBlur } from '#lib/state/auto.svelte.js';
-	import { settings } from '#lib/state/settings.svelte.js';
+	import { settings, updateSettings } from '#lib/state/settings.svelte.js';
 	import {
 		currentCount,
 		dismissCelebration,
@@ -36,12 +35,16 @@
 	let statsOpen = $state(false);
 	let settingsOpen = $state(false);
 	let zikrsOpen = $state(false);
-	let languageOpen = $state(false);
 
 	let rippleId = 0;
 	let tapCount = 0;
+	let circleEl = $state(null);
 
 	const logoUrl = asset('logo.png');
+
+	// The progress ring sits at 100/120 of the half-width; a little slack makes
+	// it a comfortable target without spilling outside the circle.
+	const tapRadius = $derived((ring * (100 / 120)) / 2 + 12);
 
 	onMount(() => {
 		const measure = () => {
@@ -85,13 +88,20 @@
 		return () => clearTimeout(timer);
 	});
 
-	function isInteractive(node) {
-		return node instanceof Element && node.closest('button, a, input, select, textarea, label, [data-nocount]');
+	/** Taps only count inside the counter circle, so the rest of the UI stays usable. */
+	function isInsideCircle(event) {
+		// Keyboard activation carries no pointer position; treat it as a hit.
+		if (event.detail === 0) return true;
+		const rect = circleEl?.getBoundingClientRect();
+		if (!rect) return false;
+		const cx = rect.left + rect.width / 2;
+		const cy = rect.top + rect.height / 2;
+		return Math.hypot(event.clientX - cx, event.clientY - cy) <= tapRadius;
 	}
 
 	function registerTap(event) {
 		if (!mounted || !active) return;
-		if (isInteractive(event.target)) return;
+		if (!isInsideCircle(event)) return;
 
 		tapCount++;
 		if (ripples.length < 26) {
@@ -105,12 +115,13 @@
 		tap(1);
 	}
 
-	function onPointerDown(event) {
+	function onCirclePointerDown(event) {
 		if (event.pointerType === 'mouse' && event.button !== 0) return;
 		registerTap(event);
 	}
 
-	function onClick(event) {
+	function onCircleClick(event) {
+		// detail === 0 means the keyboard or an assistive technology activated it.
 		if (event.detail === 0) registerTap(event);
 	}
 
@@ -130,7 +141,7 @@
 	);
 </script>
 
-<svelte:window onpointerdown={onPointerDown} onclick={onClick} onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} />
 
 <Background />
 
@@ -139,7 +150,7 @@
 </div>
 
 <div class="relative flex min-h-dvh flex-col">
-{#if !zen}
+	{#if !zen}
 		<header class="safe-t flex items-center justify-between gap-2 px-4">
 			<div class="flex items-baseline gap-2">
 				<img
@@ -153,6 +164,45 @@
 			</div>
 
 			<div class="flex items-center gap-1">
+				<button
+					class="tap h-10 w-10 rounded-full border border-[var(--line)] transition-colors {settings.muted
+						? 'text-accent'
+						: 'text-muted active:text-[var(--text)]'}"
+					onclick={() => updateSettings({ muted: !settings.muted })}
+					aria-pressed={settings.muted}
+					aria-label={settings.muted ? t('nav.unmute') : t('nav.mute')}
+					title={settings.muted ? t('nav.unmute') : t('nav.mute')}
+				>
+					{#if settings.muted}
+						<svg viewBox="0 0 24 24" class="mx-auto h-4 w-4" aria-hidden="true">
+							<path
+								d="M11 5 6.5 9H3v6h3.5L11 19V5Z"
+								fill="currentColor"
+								stroke="currentColor"
+								stroke-width="1.4"
+								stroke-linejoin="round"
+							/>
+							<path d="m16 9.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+						</svg>
+					{:else}
+						<svg viewBox="0 0 24 24" class="mx-auto h-4 w-4" aria-hidden="true">
+							<path
+								d="M11 5 6.5 9H3v6h3.5L11 19V5Z"
+								fill="currentColor"
+								stroke="currentColor"
+								stroke-width="1.4"
+								stroke-linejoin="round"
+							/>
+							<path
+								d="M15.5 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+							/>
+						</svg>
+					{/if}
+				</button>
 				<button
 					class="tap h-10 w-10 rounded-full border border-[var(--line)] text-muted transition-colors active:text-[var(--text)]"
 					onclick={() => (statsOpen = true)}
@@ -171,22 +221,6 @@
 					<svg viewBox="0 0 24 24" class="mx-auto h-4 w-4" aria-hidden="true">
 						<circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.6" fill="none" />
 						<circle cx="12" cy="12" r="3" fill="currentColor" />
-					</svg>
-				</button>
-				<button
-					class="tap h-10 w-10 rounded-full border border-[var(--line)] text-muted transition-colors active:text-[var(--text)]"
-					onclick={() => (languageOpen = true)}
-					aria-label={t('nav.language')}
-					title={t('nav.language')}
-				>
-					<svg viewBox="0 0 24 24" class="mx-auto h-4 w-4" aria-hidden="true">
-						<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" fill="none" />
-						<path
-							d="M3 12h18M12 3c2.6 2.6 2.6 15.4 0 18M12 3c-2.6 2.6-2.6 15.4 0 18"
-							stroke="currentColor"
-							stroke-width="1.5"
-							fill="none"
-						/>
 					</svg>
 				</button>
 				<button
@@ -234,16 +268,24 @@
 				{/if}
 			</div>
 
-			<div class="relative place-items-center" style="width:{ring}px;height:{ring}px">
-				<div class="absolute inset-0 grid place-items-center">
+			<div bind:this={circleEl} class="relative" style="width:{ring}px;height:{ring}px">
+				<button
+					type="button"
+					class="tap absolute inset-0 rounded-full"
+					aria-label={t('counter.tapLabel')}
+					onpointerdown={onCirclePointerDown}
+					onclick={onCircleClick}
+				></button>
+
+				<div class="pointer-events-none absolute inset-0 grid place-items-center">
 					<Beads count={count} beads={settings.beads} size={ring} radius={ring * 0.27} />
 				</div>
-				<div class="absolute inset-0 grid place-items-center">
+				<div class="pointer-events-none absolute inset-0 grid place-items-center">
 					<CountRing count={count} target={active.target ?? 0} size={ring} />
 				</div>
 			</div>
 
-			<p class="mt-5 text-center text-[0.7rem] text-muted">{zen ? t('counter.hint') : t('counter.tapAnywhere')}</p>
+			<p class="mt-5 text-center text-[0.7rem] text-muted">{zen ? t('counter.hint') : t('counter.tap')}</p>
 		{:else if mounted}
 			<p class="text-sm text-muted">{t('counter.loading')}</p>
 		{/if}
@@ -311,10 +353,6 @@
 	title={active ? `${active.translit} · ${formatPlain(count)}` : t('celebration.completed')}
 	subtitle={active?.target ? t('celebration.targetReached', { target: formatPlain(active.target) }) : ''}
 />
-
-<Sheet bind:open={languageOpen} title={t('settings.language')}>
-	<LanguagePicker onpick={() => (languageOpen = false)} />
-</Sheet>
 
 <Sheet bind:open={statsOpen} title={t('stats.heading')}>
 	<StatsView bind:open={statsOpen} />

@@ -16,7 +16,8 @@ export default {
 	nav: {
 		stats: 'Statistics',
 		settings: 'Settings',
-		language: 'Language',
+		mute: 'Mute sound',
+		unmute: 'Unmute sound',
 		enterFocus: 'Enter focus mode',
 		exitFocus: 'Exit focus mode',
 		focusShort: 'Zen',
@@ -37,8 +38,9 @@ export default {
 	},
 
 	counter: {
-		tapAnywhere: 'Tap anywhere to count',
-		hint: 'Tap anywhere to count · Esc to exit focus',
+		tap: 'Tap the circle to count',
+		hint: 'Tap the circle to count · Esc to exit focus',
+		tapLabel: 'Counter. Activate to add one.',
 		loading: 'Loading…',
 		resetCounter: 'Reset counter',
 		today: 'Today {count}',
@@ -57,7 +59,7 @@ export default {
 		unit: 's',
 		every: 'Every {seconds}s',
 		oneEvery: 'One count every {seconds} seconds',
-		running: '{count} counted automatically · tap anywhere to add by hand',
+		running: '{count} counted automatically · tap the circle to add by hand',
 		stoppedOnHide: 'Auto count paused while the app was in the background'
 	},
 
@@ -151,6 +153,8 @@ export default {
 		showArabic: 'Show Arabic',
 		showTranslation: 'Show translation',
 		sound: 'Sound & feel',
+		mute: 'Mute',
+		unmute: 'Unmuted',
 		sounds: {
 			label: 'Sound',
 			wood: 'Wood',
@@ -165,7 +169,6 @@ export default {
 		autoInterval: 'Auto-count interval',
 		zenOnLaunch: 'Start in focus mode',
 		app: 'App',
-		language: 'Language',
 		install: 'Install Zikr',
 		installed: 'Installed — running offline-capable.',
 		installHint: 'Use your browser’s “Add to home screen” to install Zikr.',
@@ -181,6 +184,31 @@ export default {
 		countAnnounce: '{name}: {count}',
 		targetAnnounce: '{name}: {count}. Target of {target} complete.',
 		volumePercent: '{count} percent'
+	},
+
+	about: {
+		heading: 'About Zikr',
+		description:
+			'Zikr is a calm, offline-first tasbeeh counter. It keeps a quiet record of your dhikr without accounts, servers or tracking — everything you count stays on your own device.',
+		featuresTitle: 'What it does',
+		features: [
+			'Count on an 11, 33 or 99 bead strand — tap the circle',
+			'Focus mode for distraction-free counting',
+			'Hands-free auto-counting from one to five seconds',
+			'Seven classic dhikr plus your own, each with a custom target',
+			'A quiet celebration whenever you reach a target',
+			'Streaks, daily goals, activity heatmap and trend charts',
+			'Export a JSON backup or CSV, and restore it any time',
+			'Works fully offline and installs to your home screen',
+			'English and Arabic with full right-to-left support'
+		],
+		share: 'Share Zikr',
+		shared: 'Shared',
+		copied: 'Link copied to your clipboard',
+		website: 'Website',
+		contact: 'Contact the developer',
+		version: 'Version {version}',
+		closing: 'Built for the sake of remembering Allah.'
 	},
 
 	export: {

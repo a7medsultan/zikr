@@ -1,3 +1,5 @@
+import { settings } from '#lib/state/settings.svelte.js';
+
 let ctx = null;
 let master = null;
 
@@ -91,7 +93,7 @@ function chime(c, t0, { gain = 0.3 }) {
  * @param {number} volume 0..1
  */
 export function playSound(kind = 'wood', volume = 0.5) {
-	if (kind === 'none' || volume <= 0) return;
+	if (settings.muted || kind === 'none' || volume <= 0) return;
 	const c = ensureContext();
 	if (!c) return;
 	const t = c.currentTime + 0.001;
@@ -115,6 +117,7 @@ export function playSound(kind = 'wood', volume = 0.5) {
 }
 
 export function playComplete(volume = 0.5) {
+	if (settings.muted) return;
 	const c = ensureContext();
 	if (!c || volume <= 0) return;
 	chime(c, c.currentTime + 0.001, { gain: 0.34 * Math.min(1, volume) });

@@ -1,7 +1,8 @@
 # Zikr — Digital Tasbeeh
 
-An offline-first Progressive Web App for counting dhikr. Tap anywhere on the
-screen, watch the bead strand move, and keep a quiet record of your practice.
+An offline-first Progressive Web App for counting dhikr. Tap the counter
+circle to count, watch the bead strand move, and keep a quiet record of your
+practice.
 
 Built with **SvelteKit (Svelte 5 runes)**, **Vite**, **Tailwind CSS v4** and
 **Dexie** (IndexedDB). No backend, no accounts, no network calls.
@@ -30,7 +31,9 @@ The service worker needs a secure context, so use `localhost` or serve the
 ## Features
 
 **Counting**
-- Tap anywhere to count — the whole screen is the target, buttons are excluded.
+- Tap the counter circle to count — the tap target is the circle itself, so
+  menus, sheets and scrolling stay out of the way. The circle is a real button,
+  so the keyboard and screen readers work too.
 - A 33-bead strand (11 / 33 / 99 selectable) rotates one bead per count, driven
   by a `svelte/motion` spring so it settles with physical weight.
 - Per-dhikr target counts: presets, any number, or `∞` for free counting.
@@ -51,6 +54,9 @@ The service worker needs a secure context, so use `localhost` or serve the
 - Four backdrops (Girih, stars, waves, none) across four gradients.
 - Four bead sounds synthesised with the Web Audio API — wood, mechanical, soft,
   silent — with a volume slider.
+- A mute toggle in the header silences everything at once. Mute is a separate
+  flag from the volume, so unmuting restores the sound you had rather than
+  resetting it.
 
 **Dhikr management**
 - Seven traditional dhikr preloaded with Arabic, transliteration and meaning.

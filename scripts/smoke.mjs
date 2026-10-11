@@ -121,14 +121,19 @@ try {
 	);
 	console.log('BOOT  ', JSON.stringify(boot, null, 1));
 
-	// Tap anywhere 7 times
+	// Tap the counter circle 7 times
 	await evaluate(
 		cdp,
 		`(() => {
+			const btn = document.querySelector('main button');
+			if (!btn) return { error: 'no counter button' };
+			const r = btn.getBoundingClientRect();
+			const cx = r.left + r.width / 2;
+			const cy = r.top + r.height / 2;
 			for (let i = 0; i < 7; i++) {
-				document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 100 + i * 8, clientY: 400 }));
+				btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: cx, clientY: cy }));
 			}
-			return true;
+			return { ok: true };
 		})()`
 	);
 	await sleep(500);
@@ -142,6 +147,115 @@ try {
 		})`
 	);
 	console.log('TAPS  ', JSON.stringify(afterTaps));
+
+	// Taps outside the circle must not count.
+	await evaluate(
+		cdp,
+		`(() => {
+			const rect = document.querySelector('main button').getBoundingClientRect();
+			const targets = [
+				document.body,
+				document.querySelector('header'),
+				document.querySelector('footer')
+			];
+			for (const el of targets) {
+				if (!el) continue;
+				el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 8, clientY: rect.bottom + 40 }));
+				el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: rect.left - 40, clientY: rect.top - 40 }));
+			}
+			return true;
+		})()`
+	);
+	await sleep(400);
+	const afterOutside = await evaluate(
+		cdp,
+		`document.querySelector('main .tabular-nums')?.textContent ?? null`
+	);
+console.log('OUTSIDE', afterOutside, afterOutside === afterTaps.count ? '(unchanged - correct)' : '(LEAKED!)');
+if (afterOutside !== afterTaps.count) problems.push('Tapping outside the circle still counted.');
+
+// The circle is a real button, so keyboard/assistive activation must still work.
+await evaluate(
+		cdp,
+		`(() => { document.querySelector('main button').click(); return true; })()`
+	);
+	await sleep(300);
+	const afterKeyboard = await evaluate(
+		cdp,
+		`document.querySelector('main .tabular-nums')?.textContent ?? null`
+	);
+	console.log(
+		'KEYBOARD',
+		afterKeyboard,
+		Number(afterKeyboard) === Number(afterOutside) + 1 ? '(counts - correct)' : '(NOT counting!)'
+	);
+	if (Number(afterKeyboard) !== Number(afterOutside) + 1) {
+		problems.push('Keyboard activation of the counter button does not count.');
+	}
+
+// --- Mute must actually silence the synthesised sounds ---
+	await evaluate(
+		cdp,
+		`(() => {
+			window.__osc = 0;
+			const AC = window.AudioContext || window.webkitAudioContext;
+			if (!AC) return { error: 'no AudioContext' };
+			const original = AC.prototype.createOscillator;
+			AC.prototype.createOscillator = function (...args) {
+				window.__osc++;
+				return original.apply(this, args);
+			};
+			const btn = document.querySelector('main button');
+			const r = btn.getBoundingClientRect();
+			const cx = r.left + r.width / 2;
+			const cy = r.top + r.height / 2;
+			for (let i = 0; i < 3; i++) {
+				btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: cx, clientY: cy }));
+			}
+			return { ok: true };
+		})()`
+	);
+	await sleep(600);
+	const audible = await evaluate(cdp, `window.__osc`);
+	await evaluate(
+		cdp,
+		`(() => {
+			const b = document.querySelector('header button[aria-pressed]');
+			b?.click();
+			return !!b;
+		})()`
+	);
+	await sleep(400);
+	const mutedState = await evaluate(
+		cdp,
+		`({ pressed: document.querySelector('header button[aria-pressed]')?.getAttribute('aria-pressed'), label: document.querySelector('header button[aria-pressed]')?.getAttribute('aria-label') })`
+	);
+	await evaluate(
+		cdp,
+		`(() => {
+			const btn = document.querySelector('main button');
+			const r = btn.getBoundingClientRect();
+			for (let i = 0; i < 3; i++) {
+				btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+			}
+			return true;
+		})()`
+	);
+	await sleep(600);
+	const afterMute = await evaluate(cdp, `window.__osc`);
+
+	console.log(
+		'MUTE  ',
+		`unmuted=${audible} muted=${afterMute}`,
+		audible > 0 && afterMute === audible ? '(silent - correct)' : '(STILL AUDIBLE!)'
+	);
+	if (!(audible > 0)) problems.push('No sound was produced before muting; mute test is inconclusive.');
+	if (afterMute !== audible) problems.push('Muting did not stop sound playback.');
+	console.log('       button:', JSON.stringify(mutedState));
+
+	// Unmute again so later checks are not silently muted.
+	await evaluate(cdp, `(() => { document.querySelector('header button[aria-pressed]')?.click(); return true; })()`);
+	await sleep(300);
 
 	// Buttons must not count
 	await evaluate(
@@ -281,8 +395,12 @@ try {
 	await evaluate(
 		cdp,
 		`(() => {
+			const btn = document.querySelector('main button');
+			const r = btn.getBoundingClientRect();
+			const cx = r.left + r.width / 2;
+			const cy = r.top + r.height / 2;
 			for (let i = 0; i < 33; i++) {
-				document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 120, clientY: 500 }));
+				btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: cx, clientY: cy }));
 			}
 			return true;
 		})()`

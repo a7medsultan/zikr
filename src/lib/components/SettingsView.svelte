@@ -1,5 +1,6 @@
 <script>
-	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import AboutApp from '#lib/components/AboutApp.svelte';
+import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import { formatPlain } from '#lib/i18n/format.js';
 	import { t } from '#lib/state/locale.svelte.js';
 	import { install, pwa, applyUpdate } from '#lib/state/pwa.svelte.js';
@@ -128,7 +129,20 @@
 		<!-- Sound & feel -->
 		<section>
 			<h3 class="mb-2 text-xs tracking-[0.2em] text-muted uppercase">{t('settings.sound')}</h3>
-			<div class="grid grid-cols-4 gap-2">
+
+			<label class="mb-3 flex items-center justify-between gap-3 text-sm">
+				<span>{settings.muted ? t('settings.mute') : t('settings.unmute')}</span>
+				<input
+					type="checkbox"
+					class="h-5 w-5 shrink-0 accent-[var(--accent)]"
+					checked={settings.muted}
+					onchange={(e) => updateSettings({ muted: e.currentTarget.checked })}
+				/>
+			</label>
+
+			<div class="grid grid-cols-4 gap-2 opacity-60 transition-opacity {settings.muted
+					? 'pointer-events-none'
+					: ''}">
 				{#each options(SOUNDS, settings.sound) as option (option.value)}
 					<button
 						class="tap rounded-xl border py-2 text-xs {option.active
@@ -270,6 +284,12 @@
 					</button>
 				{/if}
 			</div>
+		</section>
+
+		<!-- About -->
+		<section>
+			<h3 class="mb-2 text-xs tracking-[0.2em] text-muted uppercase">{t('about.heading')}</h3>
+			<AboutApp />
 		</section>
 	</div>
 {/if}

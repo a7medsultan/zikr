@@ -12,6 +12,13 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# IDE
+.idea/
+*.iml
+
+# Logs
+*.log
+
 # Env
 .env
 .env.*
@@ -24,5 +31,10 @@ vite.config.ts.timestamp-*
 
 # Local dev artifacts
 /shots
-preview.log
-tmp-backup.json
+/tmp-*.json
+*.apk
+*.aab
+*.jks
+*.keystore
+keystore.properties
+google-services.json

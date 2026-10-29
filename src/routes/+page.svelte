@@ -26,6 +26,7 @@
 	} from '#lib/state/session.svelte.js';
 	import { recomputeStats, stats } from '#lib/state/stats.svelte.js';
 	import { currentZikr, loadZikrs, selectZikr, zikrState } from '#lib/state/zikrs.svelte.js';
+	import { onBack } from '#lib/utils/native.js';
 
 	let zen = $state(false);
 	let mounted = $state(false);
@@ -71,9 +72,35 @@
 		};
 		document.addEventListener('visibilitychange', onVisibility);
 
+		// Android back: close whatever is open before leaving the app.
+		const removeBack = onBack(() => {
+			if (zikrsOpen) {
+				zikrsOpen = false;
+				return true;
+			}
+			if (settingsOpen) {
+				settingsOpen = false;
+				return true;
+			}
+			if (statsOpen) {
+				statsOpen = false;
+				return true;
+			}
+			if (zen) {
+				zen = false;
+				return true;
+			}
+			if (session.celebratingAt) {
+				dismissCelebration();
+				return true;
+			}
+			return false;
+		});
+
 		return () => {
 			window.removeEventListener('resize', measure);
 			document.removeEventListener('visibilitychange', onVisibility);
+			removeBack();
 		};
 	});
 

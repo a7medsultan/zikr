@@ -1,10 +1,30 @@
+import { Capacitor } from '@capacitor/core';
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { db } from '#lib/db.js';
 import { t } from '#lib/state/locale.svelte.js';
 import { settings } from '#lib/state/settings.svelte.js';
 import { recomputeStats } from '#lib/state/stats.svelte.js';
 import { loadZikrs } from '#lib/state/zikrs.svelte.js';
 
-function download(filename, contents, type) {
+async function download(filename, contents, type) {
+	if (Capacitor.isNativePlatform()) {
+		// A WebView cannot save blob downloads; write to the cache and hand the
+		// file to Android's share/save sheet instead.
+		const { uri } = await Filesystem.writeFile({
+			path: filename,
+			data: contents,
+			directory: Directory.Cache,
+			encoding: Encoding.UTF8
+		});
+		try {
+			await Share.share({ title: filename, files: [uri], dialogTitle: filename });
+		} catch (err) {
+			if (!String(err?.message ?? '').toLowerCase().includes('cancel')) throw err;
+		}
+		return;
+	}
+
 	const blob = new Blob([contents], { type });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
@@ -33,7 +53,7 @@ export async function exportJson() {
 		zikrs: zikrs.sort((a, b) => a.order - b.order),
 		logs
 	};
-	download(`zikr-backup-${stamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+	await download(`zikr-backup-${stamp()}.json`, JSON.stringify(payload, null, 2), 'application/json');
 }
 
 export async function exportCsv() {
@@ -47,7 +67,7 @@ export async function exportCsv() {
 			return [r.day, time, escapeCsv(r.zikrId), r.count].join(',');
 		})
 		.join('\n');
-	download(`zikr-history-${stamp()}.csv`, `${header}\n${body}\n`, 'text/csv');
+	await download(`zikr-history-${stamp()}.csv`, `${header}\n${body}\n`, 'text/csv');
 }
 
 export async function exportDailyCsv() {
@@ -57,7 +77,7 @@ export async function exportDailyCsv() {
 	const lines = [...byDay.entries()]
 		.sort((a, b) => (a[0] < b[0] ? -1 : 1))
 		.map(([day, count]) => `${day},${count}`);
-	download(`zikr-daily-${stamp()}.csv`, `day,total\n${lines.join('\n')}\n`, 'text/csv');
+	await download(`zikr-daily-${stamp()}.csv`, `day,total\n${lines.join('\n')}\n`, 'text/csv');
 }
 
 function readFile(file) {

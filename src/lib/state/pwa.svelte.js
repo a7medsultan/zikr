@@ -1,17 +1,21 @@
+import { Capacitor } from '@capacitor/core';
 import { browser } from '$app/environment';
 import { asset } from '$app/paths';
+
+/** The native shell handles updates and installation itself. */
+const native = browser && Capacitor.isNativePlatform();
 
 export const pwa = $state({
 	canInstall: false,
 	prompt: null,
-	installed: false,
+	installed: native,
 	updateReady: false
 });
 
 let reg = null;
 
 export function initPwa() {
-	if (!browser) return;
+	if (!browser || native) return;
 
 	window.addEventListener('beforeinstallprompt', (event) => {
 		event.preventDefault();
@@ -66,6 +70,7 @@ export async function install() {
 }
 
 export async function applyUpdate() {
+	if (native) return;
 	await reg?.update();
 	reg?.waiting?.postMessage({ type: 'SKIP_WAITING' });
 	location.reload();

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { applyNativeTheme } from '#lib/utils/native.js';
 
 const KEY = 'zikr:settings';
 
@@ -121,6 +122,7 @@ export function applyTheme() {
 	document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
 	const meta = document.querySelector('meta[name="theme-color"]');
 	if (meta) meta.setAttribute('content', dark ? '#0f4f38' : '#f6f3ea');
+	applyNativeTheme(dark);
 }
 
 export function updateSettings(patch) {

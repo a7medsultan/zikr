@@ -1,6 +1,8 @@
 <script>
 	import { APP } from '#lib/app.config.js';
 	import { t } from '#lib/state/locale.svelte.js';
+	import { Capacitor } from '@capacitor/core';
+	import { Share } from '@capacitor/share';
 
 	let status = $state('');
 
@@ -12,6 +14,17 @@
 			text: t('about.description'),
 			url: APP.url
 		};
+
+		if (Capacitor.isNativePlatform()) {
+			try {
+				await Share.share({ ...payload, dialogTitle: t('about.share') });
+				flash(t('about.shared'));
+				return;
+			} catch (err) {
+				// A cancelled share is not an error; anything else falls back.
+				if (String(err?.message ?? '').toLowerCase().includes('cancel')) return;
+			}
+		}
 
 		if (navigator.share) {
 			try {

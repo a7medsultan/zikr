@@ -28,6 +28,41 @@ The service worker needs a secure context, so use `localhost` or serve the
 
 ---
 
+## Android app
+
+The same web build also runs in a Capacitor Android shell.
+
+```bash
+npm install
+npm run android:sync   # build the web app and copy it into android/
+npm run android:build  # debug APK in android/app/build/outputs/apk/debug/
+npm run android:run    # install on a connected device or emulator
+npm run android        # open the project in Android Studio
+```
+
+Requirements: JDK 21, Android SDK 36 and `ANDROID_HOME` pointing at the SDK.
+Local builds need `JAVA_HOME`; `scripts/android-build.mjs` finds a JDK
+automatically (including `~/.jdks`, Android Studio's bundled JBR and common
+Linux paths), or you can export it yourself. `android/local.properties` keeps
+the machine's SDK path and is gitignored.
+
+- App id: `com.ahmedsultan.zikr`, set in `capacitor.config.json`. Change it
+  before the first release — Android treats a new id as a different app.
+- Icons and splash screens are generated from `assets/logo.png`; regenerate
+  them with `npm run assets:android`.
+- Native integration: hardware Back closes sheets and focus mode before
+  minimising, haptics use the native API, and About sharing plus JSON/CSV
+  exports use Android's share sheet. The service worker and install prompt are
+  skipped inside the shell.
+- The web app remains the source of truth. `npm run android:sync` rebuilds
+  `build/` and copies it into the Android project.
+- `android:build` produces a debug APK at
+  `android/app/build/outputs/apk/debug/app-debug.apk`. Release builds need a
+  signing keystore (Android Studio → *Generate Signed Bundle / APK*); debug
+  builds are not publishable.
+
+---
+
 ## Features
 
 **Counting**
@@ -95,7 +130,7 @@ src/
     components/     Beads, CountRing, Celebration, Heatmap, TrendChart, sheets…
     data/defaults.js   the seven built-in dhikr
     state/          settings, zikrs, session, stats, auto, pwa  (runes stores)
-    utils/          date, sound, haptics, export/import
+    utils/          date, sound, haptics, native, export/import, migrate
     db.js           Dexie schema (zikrs, logs)
   routes/
     +layout.svelte  theme bootstrap + service worker
@@ -105,6 +140,9 @@ static/
   sw.js
   logo.png           in-app header mark
   icons/             generated from the logo
+android/              Capacitor Android project
+assets/logo.png       source image for the Android icon and splash set
+capacitor.config.json app id, name, webDir and native plugin settings
 scripts/
   import_logo.py     regenerates the icon set from a source image
   smoke.mjs           drives a headless Chromium/Edge over CDP to test the built app

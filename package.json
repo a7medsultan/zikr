@@ -1,7 +1,7 @@
 {
 	"name": "zikr",
 	"private": true,
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -12,11 +12,18 @@
 		"shots:i18n": "node scripts/shots-i18n.mjs",
 		"shots:about": "node scripts/shots-about.mjs",
 		"audit:i18n": "node scripts/audit-i18n.mjs",
+		"android:sync": "npm run build && cap sync android",
+		"android": "npm run android:sync && cap open android",
+		"android:build": "npm run android:sync && node scripts/android-build.mjs assembleDebug",
+		"android:run": "npm run android:sync && node scripts/android-build.mjs installDebug",
+		"assets:android": "capacitor-assets generate --android --iconBackgroundColor \"#0f4f38\" --iconBackgroundColorDark \"#0f4f38\" --splashBackgroundColor \"#0f4f38\" --splashBackgroundColorDark \"#0f4f38\" --logoSplashScale 0.18",
 		"prepare": "svelte-kit sync || echo ''",
 		"logo": "python scripts/import_logo.py",
 		"check:icons": "node scripts/check-icons.mjs"
 	},
 	"devDependencies": {
+		"@capacitor/assets": "^3.0.5",
+		"@capacitor/cli": "^8.6.0",
 		"@sveltejs/adapter-auto": "^8.0.0",
 		"@sveltejs/adapter-static": "^4.0.0",
 		"@sveltejs/kit": "^3.0.0",
@@ -31,6 +38,14 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"@capacitor/android": "^8.6.0",
+		"@capacitor/app": "^8.1.2",
+		"@capacitor/core": "^8.6.0",
+		"@capacitor/filesystem": "^8.1.5",
+		"@capacitor/haptics": "^8.0.2",
+		"@capacitor/share": "^8.0.3",
+		"@capacitor/splash-screen": "^8.0.2",
+		"@capacitor/status-bar": "^8.0.4",
 		"dexie": "^4.4.6"
 	}
 }

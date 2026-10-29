@@ -1,0 +1,35 @@
+{
+	"appId": "com.ahmedsultan.zikr",
+	"appName": "Zikr",
+	"webDir": "build",
+	"backgroundColor": "#0f4f38",
+	"server": {
+		"androidScheme": "https",
+		"cleartext": false
+	},
+	"android": {
+		"backgroundColor": "#0f4f38",
+		"allowMixedContent": false
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 500,
+			"launchAutoHide": true,
+			"backgroundColor": "#0f4f38",
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": false,
+			"splashFullScreen": true,
+			"splashImmersive": true
+		},
+		"StatusBar": {
+			"style": "DARK",
+			"backgroundColor": "#0f4f38"
+		},
+		"SystemBars": {
+			"style": "DARK",
+			"insetsHandling": "css",
+			"initialViewportFitValueHint": "cover"
+		}
+	}
+}

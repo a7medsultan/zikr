@@ -2,14 +2,12 @@
 	import { auto, setAutoSeconds, stopAuto, toggleAuto } from '#lib/state/auto.svelte.js';
 	import { formatPlain } from '#lib/i18n/format.js';
 	import { t } from '#lib/state/locale.svelte.js';
-	import { settings, updateSettings } from '#lib/state/settings.svelte.js';
 	import { resetCurrent } from '#lib/state/session.svelte.js';
 
 	const STEPS = [1, 2, 3, 4, 5];
 
 	function pick(seconds) {
 		setAutoSeconds(seconds);
-		updateSettings({ autoSeconds: auto.seconds });
 	}
 </script>
 

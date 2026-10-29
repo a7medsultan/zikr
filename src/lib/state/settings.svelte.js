@@ -37,6 +37,46 @@ const defaults = {
 	zenOnLaunch: false
 };
 
+const BEAD_COUNTS = [11, 33, 99];
+
+function pick(value, allowed, fallback) {
+	return allowed.includes(value) ? value : fallback;
+}
+
+function bool(value, fallback) {
+	return typeof value === 'boolean' ? value : fallback;
+}
+
+function numberIn(value, min, max, fallback, round = false) {
+	const n = Number(value);
+	if (!Number.isFinite(n)) return fallback;
+	const clamped = Math.min(max, Math.max(min, n));
+	return round ? Math.round(clamped) : clamped;
+}
+
+/**
+ * Keeps settings inside the shapes the UI can render. Used for stored values
+ * and for JSON imports, which may predate a setting or be hand-edited.
+ */
+export function sanitizeSettings(input = {}, base = defaults) {
+	const source = input && typeof input === 'object' ? input : {};
+	return {
+		theme: pick(source.theme, THEMES, base.theme),
+		sound: pick(source.sound, SOUNDS, base.sound),
+		volume: numberIn(source.volume, 0, 1, base.volume),
+		muted: bool(source.muted, base.muted),
+		haptics: bool(source.haptics, base.haptics),
+		dailyGoal: numberIn(source.dailyGoal, 1, 1_000_000, base.dailyGoal, true),
+		pattern: pick(source.pattern, PATTERNS, base.pattern),
+		gradient: pick(source.gradient, GRADIENTS, base.gradient),
+		beads: pick(Number(source.beads), BEAD_COUNTS, base.beads),
+		showArabic: bool(source.showArabic, base.showArabic),
+		showTranslation: bool(source.showTranslation, base.showTranslation),
+		autoSeconds: numberIn(source.autoSeconds, 1, 5, base.autoSeconds, true),
+		zenOnLaunch: bool(source.zenOnLaunch, base.zenOnLaunch)
+	};
+}
+
 function read() {
 	if (!browser) return {};
 	try {
@@ -46,7 +86,7 @@ function read() {
 	}
 }
 
-export const settings = $state({ ...defaults, ...read() });
+export const settings = $state(sanitizeSettings(read()));
 
 let saveHandle;
 function persist() {
@@ -66,8 +106,11 @@ function systemPrefersDark() {
 	return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
+/** Reactive mirror of the OS preference, so "system" really is live. */
+export const system = $state({ dark: systemPrefersDark() });
+
 export function resolveTheme(theme = settings.theme) {
-	if (theme === 'system') return systemPrefersDark() ? 'dark' : 'light';
+	if (theme === 'system') return system.dark ? 'dark' : 'light';
 	return theme;
 }
 
@@ -81,20 +124,21 @@ export function applyTheme() {
 }
 
 export function updateSettings(patch) {
-	Object.assign(settings, patch);
+	Object.assign(settings, sanitizeSettings({ ...settings, ...patch }));
 	persist();
 	applyTheme();
 }
 
 export function resetSettings() {
-	Object.assign(settings, defaults);
+	Object.assign(settings, sanitizeSettings(defaults));
 	persist();
 	applyTheme();
 }
 
 if (browser) {
 	applyTheme();
-	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+		system.dark = event.matches;
 		if (settings.theme === 'system') applyTheme();
 	});
 }

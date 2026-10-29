@@ -69,6 +69,11 @@ function readFile(file) {
 	});
 }
 
+/** Identifies an imported log row so the same backup can be merged twice. */
+function logSignature(row) {
+	return `${row.zikrId}|${row.day}|${row.ts}|${row.count}`;
+}
+
 /**
  * @param {File} file
  * @param {'merge'|'replace'} mode
@@ -105,6 +110,7 @@ export async function importFile(file, mode = 'merge') {
 		await db.zikrs.bulkPut(clean);
 	}
 
+	let importedLogs = 0;
 	if (Array.isArray(data.logs) && data.logs.length) {
 		const clean = data.logs
 			.filter((l) => l && typeof l.zikrId === 'string')
@@ -114,7 +120,30 @@ export async function importFile(file, mode = 'merge') {
 				ts: Number(l.ts) || Date.now(),
 				count: Number(l.count) || 0
 			}));
-		await db.logs.bulkPut(clean);
+
+		// Merge is idempotent: rows already present (same dhikr, day, bucket and
+		// count) are skipped, so importing the same backup twice does not double
+		// the history.
+		await db.transaction('rw', db.logs, async () => {
+			const seen = new Map();
+			for (const row of await db.logs.toArray()) {
+				const signature = logSignature(row);
+				seen.set(signature, (seen.get(signature) ?? 0) + 1);
+			}
+			for (const row of clean) {
+				if (!row.count) continue;
+				const signature = logSignature(row);
+				const remaining = seen.get(signature) ?? 0;
+				if (remaining > 0) {
+					// One already-present row accounts for this one; a backup that
+					// legitimately has two identical rows still imports the second.
+					seen.set(signature, remaining - 1);
+					continue;
+				}
+				await db.logs.add(row);
+				importedLogs++;
+			}
+		});
 	}
 
 	if (data.settings && typeof data.settings === 'object') {
@@ -124,7 +153,7 @@ export async function importFile(file, mode = 'merge') {
 
 	await loadZikrs();
 	await recomputeStats();
-	return { zikrs: data.zikrs?.length ?? 0, logs: data.logs?.length ?? 0 };
+	return { zikrs: data.zikrs?.length ?? 0, logs: importedLogs };
 }
 
 export async function clearHistory() {

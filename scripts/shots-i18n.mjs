@@ -1,15 +1,15 @@
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+import { browserPath, profileRoot } from './browser.mjs';
+const EDGE = browserPath();
 const URL_APP = process.argv[2] ?? 'http://localhost:4200';
 const PORT = 9336;
 
 mkdirSync('shots/i18n', { recursive: true });
 
-const profile = mkdtempSync(join(tmpdir(), 'zikr-i18n-'));
+const profile = mkdtempSync(join(profileRoot(), 'zikr-i18n-'));
 const edge = spawn(
 	EDGE,
 	[

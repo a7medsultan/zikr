@@ -117,7 +117,7 @@ export function playSound(kind = 'wood', volume = 0.5) {
 }
 
 export function playComplete(volume = 0.5) {
-	if (settings.muted) return;
+	if (settings.muted || settings.sound === 'none') return;
 	const c = ensureContext();
 	if (!c || volume <= 0) return;
 	chime(c, c.currentTime + 0.001, { gain: 0.34 * Math.min(1, volume) });

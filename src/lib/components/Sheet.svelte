@@ -2,15 +2,69 @@
 	import { fade, fly } from 'svelte/transition';
 	import { t } from '#lib/state/locale.svelte.js';
 
-	let { open = $bindable(false), title = '', children, footer } = $props();
+	let { open = $bindable(false), title = '', children } = $props();
+
+	let panel = $state(null);
+	let opener = null;
+
+	const FOCUSABLE =
+		'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+	function focusable() {
+		if (!panel) return [];
+		return [...panel.querySelectorAll(FOCUSABLE)].filter(
+			(el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement
+		);
+	}
 
 	function close() {
 		open = false;
 	}
 
 	function onkeydown(event) {
-		if (event.key === 'Escape') close();
+		if (!open) return;
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			close();
+			return;
+		}
+		if (event.key !== 'Tab') return;
+
+		const list = focusable();
+		if (!list.length) {
+			event.preventDefault();
+			panel?.focus();
+			return;
+		}
+		const first = list[0];
+		const last = list[list.length - 1];
+		const active = document.activeElement;
+
+		if (event.shiftKey && (active === first || active === panel)) {
+			event.preventDefault();
+			last.focus();
+		} else if (!event.shiftKey && active === last) {
+			event.preventDefault();
+			first.focus();
+		}
 	}
+
+	// Keep keyboard focus inside the dialog and stop the page behind it from
+	// scrolling; both are restored when the sheet closes.
+	$effect(() => {
+		if (!open) return;
+		opener = document.activeElement;
+		const body = document.body;
+		const previousOverflow = body.style.overflow;
+		body.style.overflow = 'hidden';
+		const raf = requestAnimationFrame(() => panel?.focus());
+
+		return () => {
+			cancelAnimationFrame(raf);
+			body.style.overflow = previousOverflow;
+			if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+		};
+	});
 </script>
 
 <svelte:window {onkeydown} />
@@ -26,7 +80,9 @@
 		></button>
 
 		<div
-			class="panel safe-b relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl sm:rounded-3xl"
+			bind:this={panel}
+			tabindex="-1"
+			class="panel safe-b relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl outline-none sm:rounded-3xl"
 			transition:fly={{ y: 40, duration: 320, opacity: 0.9 }}
 			role="dialog"
 			aria-modal="true"
@@ -53,10 +109,6 @@
 			<div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
 				{@render children?.()}
 			</div>
-
-			{#if footer}
-				<div class="border-t border-[var(--line)] px-5 pt-3">{@render footer()}</div>
-			{/if}
 		</div>
 	</div>
 {/if}

@@ -10,6 +10,7 @@
 		"smoke": "node scripts/smoke.mjs",
 		"shots": "node scripts/shots.mjs",
 		"shots:i18n": "node scripts/shots-i18n.mjs",
+		"shots:about": "node scripts/shots-about.mjs",
 		"audit:i18n": "node scripts/audit-i18n.mjs",
 		"prepare": "svelte-kit sync || echo ''",
 		"logo": "python scripts/import_logo.py",

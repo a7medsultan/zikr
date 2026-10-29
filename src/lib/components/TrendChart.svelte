@@ -1,7 +1,7 @@
 <script>
 	import { Spring } from 'svelte/motion';
 	import { formatPlain, formatShortDate } from '#lib/i18n/format.js';
-	import { t } from '#lib/state/locale.svelte.js';
+	import { dir, t } from '#lib/state/locale.svelte.js';
 	import { stats } from '#lib/state/stats.svelte.js';
 
 	let { range = 7 } = $props();
@@ -10,6 +10,7 @@
 	const H = 120;
 	const PAD = 6;
 
+	const rtl = $derived(dir() === 'rtl');
 	const data = $derived(range === 7 ? stats.last7 : range === 30 ? stats.last30 : stats.last90);
 	const reveal = new Spring(0, { stiffness: 0.09, damping: 0.9, precision: 0.001 });
 	$effect(() => {
@@ -24,7 +25,10 @@
 	const step = $derived(data.length > 1 ? (W - PAD * 2) / (data.length - 1) : 0);
 
 	function px(i) {
-		return PAD + (data.length > 1 ? i * step : W / 2);
+		// Mirror the time axis in RTL so the newest day sits on the left, matching
+		// the reversed date labels under the chart.
+		const x = PAD + (data.length > 1 ? i * step : (W - PAD * 2) / 2);
+		return rtl ? W - x : x;
 	}
 	function py(v) {
 		return H - PAD - (v / max) * (H - PAD * 2);

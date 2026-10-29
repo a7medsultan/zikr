@@ -58,6 +58,8 @@
 			await recomputeStats();
 			mounted = true;
 			zen = settings.zenOnLaunch;
+			// PWA shortcut: /?start=1 opens straight into focus mode.
+			if (new URLSearchParams(location.search).get('start') === '1') zen = true;
 		})();
 
 		const onVisibility = async () => {
@@ -68,13 +70,6 @@
 			}
 		};
 		document.addEventListener('visibilitychange', onVisibility);
-
-		(async () => {
-			await loadZikrs();
-			await recomputeStats();
-			mounted = true;
-			zen = settings.zenOnLaunch;
-		})();
 
 		return () => {
 			window.removeEventListener('resize', measure);
@@ -105,10 +100,11 @@
 
 		tapCount++;
 		if (ripples.length < 26) {
-			ripples = [
-				...ripples,
-				{ id: rippleId++, x: event.clientX ?? 0, y: event.clientY ?? 0, tone: tapCount }
-			];
+			const rect = circleEl?.getBoundingClientRect();
+			const keyboard = event.detail === 0;
+			const x = keyboard && rect ? rect.left + rect.width / 2 : (event.clientX ?? 0);
+			const y = keyboard && rect ? rect.top + rect.height / 2 : (event.clientY ?? 0);
+			ripples = [...ripples, { id: rippleId++, x, y, tone: tapCount }];
 			const id = rippleId - 1;
 			setTimeout(() => (ripples = ripples.filter((r) => r.id !== id)), 900);
 		}
@@ -229,12 +225,14 @@
 					aria-label={t('nav.settings')}
 				>
 					<svg viewBox="0 0 24 24" class="mx-auto h-4 w-4" aria-hidden="true">
-						<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none" />
+						<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6" />
 						<path
-							d="M12 3.5v2M12 18.5v2M20.5 12h-2M5.5 12h-2M18 6l-1.4 1.4M7.4 16.6 6 18M18 18l-1.4-1.4M7.4 7.4 6 6"
+							d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+							fill="none"
 							stroke="currentColor"
 							stroke-width="1.6"
 							stroke-linecap="round"
+							stroke-linejoin="round"
 						/>
 					</svg>
 				</button>

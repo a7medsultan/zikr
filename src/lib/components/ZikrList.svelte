@@ -47,19 +47,19 @@
 				<div class="flex items-start gap-3">
 					<button class="min-w-0 flex-1 text-start" onclick={() => pick(zikr.id)}>
 						{#if settings.showArabic && zikr.arabic}
-							<p
-								class="overflow-hidden text-ellipsis whitespace-nowrap font-arabic text-2xl leading-[1.9]"
+							<span
+								class="block overflow-hidden text-ellipsis whitespace-nowrap font-arabic text-2xl leading-[1.9]"
 								dir="rtl"
 								lang="ar"
 							>
 								{zikr.arabic}
-							</p>
+							</span>
 						{/if}
-						<p class="truncate text-sm font-medium">{zikr.translit}</p>
+						<span class="block truncate text-sm font-medium">{zikr.translit}</span>
 						{#if settings.showTranslation && meaningOf(zikr, locale.code)}
-							<p class="truncate text-xs text-muted">{meaningOf(zikr, locale.code)}</p>
+							<span class="block truncate text-xs text-muted">{meaningOf(zikr, locale.code)}</span>
 						{/if}
-						<p class="mt-1 text-[0.68rem] tracking-wide text-muted">
+						<span class="mt-1 block text-[0.68rem] tracking-wide text-muted">
 							{zikr.target > 0
 								? t('zikr.target', { target: formatPlain(zikr.target) })
 								: t('zikr.noTarget')}
@@ -68,7 +68,7 @@
 								session: formatPlain(session.counts[zikr.id] ?? 0),
 								total: formatPlain(stats.byZikr[zikr.id] ?? 0)
 							})}
-						</p>
+						</span>
 					</button>
 
 					<div class="flex flex-col items-end gap-1.5">
@@ -135,24 +135,26 @@
 								{t('common.done')}
 							</button>
 
-							{#if confirmDelete === zikr.id}
-								<button
-									class="tap flex-1 rounded-xl border border-red-500/60 py-2.5 text-sm text-red-400"
-									onclick={async () => {
-										await removeZikr(zikr.id);
-										confirmDelete = null;
-										editingId = null;
-									}}
-								>
-									{t('zikr.confirmDelete')}
-								</button>
-							{:else}
-								<button
-									class="tap rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm text-muted"
-									onclick={() => (confirmDelete = zikr.id)}
-								>
-									{t('common.delete')}
-								</button>
+							{#if !zikr.builtin}
+								{#if confirmDelete === zikr.id}
+									<button
+										class="tap flex-1 rounded-xl border border-red-500/60 py-2.5 text-sm text-red-400"
+										onclick={async () => {
+											await removeZikr(zikr.id);
+											confirmDelete = null;
+											editingId = null;
+										}}
+									>
+										{t('zikr.confirmDelete')}
+									</button>
+								{:else}
+									<button
+										class="tap rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm text-muted"
+										onclick={() => (confirmDelete = zikr.id)}
+									>
+										{t('common.delete')}
+									</button>
+								{/if}
 							{/if}
 						</div>
 					</div>

@@ -1,7 +1,7 @@
 <script>
 	import { formatMonth, formatPlain, formatShortDate, formatWeekday } from '#lib/i18n/format.js';
 	import { t } from '#lib/state/locale.svelte.js';
-	import { settings } from '#lib/state/settings.svelte.js';
+	import { resolveTheme, settings } from '#lib/state/settings.svelte.js';
 	import { stats } from '#lib/state/stats.svelte.js';
 	import { buildHeatmapGrid, dayKey, monthLabels } from '#lib/utils/date.js';
 
@@ -27,16 +27,10 @@
 		return 1;
 	}
 
-	function isDark() {
-		if (settings.theme === 'dark') return true;
-		if (settings.theme === 'light') return false;
-		return typeof window !== 'undefined'
-			? window.matchMedia('(prefers-color-scheme: dark)').matches
-			: true;
-	}
+	const dark = $derived(resolveTheme() === 'dark');
 
 	const palette = $derived(
-		isDark()
+		dark
 			? [
 					'rgb(232 200 122 / 0.07)',
 					'rgb(232 200 122 / 0.3)',

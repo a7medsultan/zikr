@@ -60,7 +60,7 @@ The service worker needs a secure context, so use `localhost` or serve the
 
 **Dhikr management**
 - Seven traditional dhikr preloaded with Arabic, transliteration and meaning.
-- Add, edit, reorder and delete your own; set a target for any of them.
+- Add, reorder and delete your own; set a target for any of them.
 
 **Statistics**
 - Session count and lifetime totals, overall and per dhikr.
@@ -81,9 +81,9 @@ The service worker needs a secure context, so use `localhost` or serve the
   between sessions.
 - Layout mirrors automatically: Arabic runs right-to-left, including the
   progress bar, sheets and charts.
-- Dates and plurals follow each language — Arabic renders六月/يوليو on the
-  heatmap and uses the correct one/two/few/many forms.
-- Digitals stay Latin (`0-9`) in every language; see "Digits" below.
+- Dates and plurals follow each language — Arabic renders its own month names
+  on the heatmap and uses the correct one/two/few/many forms.
+- Digits stay Latin (`0-9`) in every language; see "Digits" below.
 
 ---
 
@@ -107,9 +107,11 @@ static/
   icons/             generated from the logo
 scripts/
   import_logo.py     regenerates the icon set from a source image
-  smoke.mjs           drives a headless Edge over CDP to test the built app
+  smoke.mjs           drives a headless Chromium/Edge over CDP to test the built app
   shots.mjs           captures screenshots of every screen
   shots-i18n.mjs      captures both languages, LTR and RTL
+  shots-about.mjs     captures the About section
+  browser.mjs         locates Chromium/Edge and the disposable profile directory
   audit-i18n.mjs      missing translation keys, hard-coded strings
 ```
 
@@ -194,12 +196,18 @@ own numbering system instead, set `NUMBERING_SYSTEM` to `undefined` in
 ## Development helpers
 
 ```bash
-npm run logo -- "C:\path\to\logo.jpg"  # regenerate the icon set from a logo
+npm run logo -- "../logo.jpg"        # regenerate the icon set from a logo
 npm run smoke      # end-to-end check against a running preview server
 npm run shots      # write screenshots into shots/
 npm run shots:i18n # screenshot both languages, LTR and RTL
+npm run shots:about # screenshot the About section
 npm run audit:i18n # missing translation keys, hard-coded strings
 ```
+
+The CDP scripts find Chrome, Chromium or Edge automatically. Set
+`BROWSER=/path/to/browser` to choose one. Snap-confined Chromium cannot write
+to the system temp directory, so also point `ZIKR_PROFILE_DIR` at a writable
+path (for example `~/snap/chromium/common`).
 
 ### Regenerating the icons
 
@@ -245,7 +253,7 @@ npm run check:icons -- http://localhost:4173 9341 /tmp/profile "after"
 
 `after` should show a different cache name and a different icon byte count.
 
-`smoke` boots headless Edge over the DevTools protocol and asserts the things
+`smoke` boots headless Chromium/Edge over the DevTools protocol and asserts the things
 that are easy to break: counting, undo, dhikr switching, auto-count, the target
 celebration, zen mode, service-worker registration, persistence across a reload,
 that the app still mounts with the network switched off, and that a JSON backup
@@ -258,7 +266,8 @@ argument, e.g. `node scripts/smoke.mjs http://localhost:4173`.
 
 ## Accessibility
 
-- Every control has an accessible name; tap targets are at least 40px.
+- Every control has an accessible name; primary controls are at least 40px,
+  and no tap target is below the 24px WCAG minimum.
 - The count is announced through a polite live region.
 - `prefers-reduced-motion` collapses all animation.
 - Text and background colours meet contrast requirements in both themes.

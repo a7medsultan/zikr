@@ -1,6 +1,7 @@
 import { db } from '#lib/db.js';
 import { DEFAULT_ZIKRS } from '#lib/data/defaults.js';
 import { browser } from '$app/environment';
+import { migrateDatabase } from '#lib/utils/migrate.js';
 
 const CURRENT_KEY = 'zikr:current';
 
@@ -22,6 +23,7 @@ function normalise(list) {
 }
 
 export async function loadZikrs() {
+	await migrateDatabase();
 	const existing = await db.zikrs.toArray();
 	if (existing.length === 0) {
 		await db.zikrs.bulkPut(normalise(DEFAULT_ZIKRS));
@@ -88,6 +90,9 @@ export async function updateZikr(id, patch) {
 }
 
 export async function removeZikr(id) {
+	const record = zikrState.items.find((z) => z.id === id);
+	// Built-ins come back on the next load anyway; keep the UI honest.
+	if (record?.builtin) return;
 	await db.zikrs.delete(id);
 	zikrState.items = normalise(zikrState.items.filter((z) => z.id !== id));
 	if (zikrState.currentId === id) {
@@ -108,6 +113,13 @@ export async function moveZikr(id, direction) {
 }
 
 export async function restoreDefaults() {
+	// "Erase everything" must also remove custom dhikr, so start from a clean
+	// table rather than layering the defaults over the old list.
+	await db.zikrs.clear();
 	await db.zikrs.bulkPut(normalise(DEFAULT_ZIKRS));
 	zikrState.items = normalise(DEFAULT_ZIKRS);
+	if (!zikrState.items.some((z) => z.id === zikrState.currentId)) {
+		zikrState.currentId = zikrState.items[0]?.id ?? null;
+		persistCurrent();
+	}
 }

@@ -55,7 +55,7 @@ export const DEFAULT_ZIKRS = [
 		builtin: true
 	},
 	{
-		id: 'lailahaillallah-n/',
+		id: 'hawqala',
 		arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِٱللَّهِ',
 		translit: 'Lā ḥawla wa lā quwwata illā billāh',
 		meaning: 'There is no power nor strength except with Allah',

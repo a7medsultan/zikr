@@ -19,10 +19,13 @@ export function compactRows(entries) {
 	const groups = new Map();
 	for (const e of entries) {
 		const b = bucketFor(e.ts);
-		const key = `${e.zikrId}|${b}`;
+		// Include the day so a bucket that straddles midnight cannot merge two
+		// dates into one row.
+		const key = `${e.zikrId}|${e.day}|${b}`;
 		const existing = groups.get(key);
 		if (existing) existing.count += e.count;
 		else groups.set(key, { zikrId: e.zikrId, day: e.day, ts: b, count: e.count });
 	}
-	return [...groups.values()];
+	// A tap and an undo in the same bucket cancel out; do not store empty rows.
+	return [...groups.values()].filter((row) => row.count !== 0);
 }

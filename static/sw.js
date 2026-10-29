@@ -34,7 +34,11 @@ self.addEventListener('activate', (event) => {
 		caches
 			.keys()
 			.then((keys) =>
-				Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+				Promise.all(
+					keys
+						.filter((k) => k.startsWith('zikr-') && k !== CACHE)
+						.map((k) => caches.delete(k))
+				)
 			)
 			.then(() => self.clients.claim())
 	);

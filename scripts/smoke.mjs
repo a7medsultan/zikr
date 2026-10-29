@@ -1,13 +1,13 @@
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+import { browserPath, profileRoot } from './browser.mjs';
+const EDGE = browserPath();
 const URL_APP = process.argv[2] ?? 'http://localhost:4178';
 const PORT = 9333;
 
-const profile = mkdtempSync(join(tmpdir(), 'zikr-smoke-'));
+const profile = mkdtempSync(join(profileRoot(), 'zikr-smoke-'));
 const edge = spawn(
 	EDGE,
 	[
@@ -283,10 +283,10 @@ await evaluate(
 			return {
 				dialog: true,
 				heatCells: dialog.querySelectorAll('div[title]').length,
-				hasLifetime: dialog.innerText.includes('Lifetime'),
-				hasTrend: dialog.innerText.includes('Trend'),
-				hasActivity: dialog.innerText.includes('Activity'),
-				hasBackup: dialog.innerText.includes('Backup'),
+				hasLifetime: dialog.innerText.toLowerCase().includes('lifetime'),
+				hasTrend: dialog.innerText.toLowerCase().includes('trend'),
+				hasActivity: dialog.innerText.toLowerCase().includes('activity'),
+				hasBackup: dialog.innerText.toLowerCase().includes('backup'),
 				text: dialog.innerText.slice(0, 160).replace(/\\n/g, ' | ')
 			};
 		})()`

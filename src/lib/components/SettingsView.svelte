@@ -1,6 +1,7 @@
 <script>
 	import AboutApp from '#lib/components/AboutApp.svelte';
-import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
+	import { setAutoSeconds } from '#lib/state/auto.svelte.js';
 	import { formatPlain } from '#lib/i18n/format.js';
 	import { t } from '#lib/state/locale.svelte.js';
 	import { install, pwa, applyUpdate } from '#lib/state/pwa.svelte.js';
@@ -16,6 +17,7 @@ import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	} from '#lib/state/settings.svelte.js';
 	import { flush, resetAll } from '#lib/state/session.svelte.js';
 	import { restoreDefaults } from '#lib/state/zikrs.svelte.js';
+	import { clearHistory } from '#lib/utils/export.js';
 
 	let { open = $bindable(false) } = $props();
 
@@ -206,7 +208,7 @@ import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 							class="tap h-8 w-9 rounded-lg border text-xs {settings.autoSeconds === second
 								? 'border-[var(--accent)] text-accent'
 								: 'border-[var(--line)] text-muted'}"
-							onclick={() => updateSettings({ autoSeconds: second })}
+							onclick={() => setAutoSeconds(second)}
 							aria-pressed={settings.autoSeconds === second}
 							aria-label={t('auto.oneEvery', { seconds: formatPlain(second) })}
 						>
@@ -260,6 +262,7 @@ import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 							class="tap flex-1 rounded-xl bg-red-500/90 py-2.5 text-sm font-medium text-white"
 							onclick={async () => {
 								await flush();
+								await clearHistory();
 								resetAll();
 								resetSettings();
 								await restoreDefaults();

@@ -2,7 +2,8 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+import { browserPath } from './browser.mjs';
+const EDGE = browserPath();
 const URL_APP = process.argv[2];
 const PORT = Number(process.argv[3] ?? 9340);
 const PROFILE = process.argv[4];

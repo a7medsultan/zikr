@@ -1,9 +1,8 @@
-import { settings } from '#lib/state/settings.svelte.js';
+import { settings, updateSettings } from '#lib/state/settings.svelte.js';
 import { tap } from '#lib/state/session.svelte.js';
 
 let handle = null;
 let elapsed = 0;
-let since = 0;
 
 export const auto = $state({
 	running: false,
@@ -15,7 +14,6 @@ export const auto = $state({
 const TICK = 200;
 
 function loop() {
-	since += TICK;
 	elapsed += TICK;
 	const span = Math.max(250, auto.seconds * 1000);
 	auto.remaining = Math.max(0, Math.ceil((span - elapsed) / 1000));
@@ -28,7 +26,17 @@ function loop() {
 
 export function setAutoSeconds(value) {
 	auto.seconds = Math.min(5, Math.max(1, Number(value) || 2));
+	updateSettings({ autoSeconds: auto.seconds });
 }
+
+// Settings can also be changed from SettingsView or a JSON import; keep the
+// running timer in step with whichever control was used.
+$effect.root(() => {
+	$effect(() => {
+		const seconds = settings.autoSeconds;
+		if (seconds !== auto.seconds) auto.seconds = seconds;
+	});
+});
 
 export function startAuto() {
 	stopAuto();

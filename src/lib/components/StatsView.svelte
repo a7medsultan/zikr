@@ -1,8 +1,9 @@
 <script>
 	import Heatmap from '#lib/components/Heatmap.svelte';
 	import TrendChart from '#lib/components/TrendChart.svelte';
+	import { meaningOf } from '#lib/data/defaults.js';
 	import { formatNumber, formatPlain } from '#lib/i18n/format.js';
-	import { t } from '#lib/state/locale.svelte.js';
+	import { locale, t } from '#lib/state/locale.svelte.js';
 	import { recomputeStats, stats } from '#lib/state/stats.svelte.js';
 	import { settings, updateSettings } from '#lib/state/settings.svelte.js';
 	import { zikrState } from '#lib/state/zikrs.svelte.js';
@@ -20,6 +21,12 @@
 	const todayProgress = $derived(
 		settings.dailyGoal > 0 ? Math.min(1, stats.today / settings.dailyGoal) : 0
 	);
+
+	/** Arabic readers get the dhikr itself, not a Latin transliteration. */
+	function zikrLabel(zikr) {
+		if (locale.code !== 'ar') return zikr.translit;
+		return zikr.arabic || meaningOf(zikr, 'ar') || zikr.translit;
+	}
 
 	async function run(action, ok) {
 		busy = true;
@@ -102,7 +109,14 @@
 					{@const share = stats.lifetime ? total / stats.lifetime : 0}
 					<div>
 						<div class="flex justify-between gap-3 text-xs">
-							<span class="truncate">{zikr.translit}</span>
+							<span
+								class="truncate"
+								class:font-arabic={locale.code === 'ar' && !!zikr.arabic}
+								dir={locale.code === 'ar' && zikr.arabic ? 'rtl' : undefined}
+								lang={locale.code === 'ar' && zikr.arabic ? 'ar' : undefined}
+							>
+								{zikrLabel(zikr)}
+							</span>
 							<span class="tabular-nums text-muted">{formatNumber(total)}</span>
 						</div>
 						<div class="mt-1 h-1 overflow-hidden rounded-full bg-[var(--line)]">
